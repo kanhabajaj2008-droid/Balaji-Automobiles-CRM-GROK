@@ -1,0 +1,116 @@
+@import url("https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&display=swap");
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "DM Sans", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Barlow Condensed", "DM Sans", sans-serif;
+
+  --color-bg: #f3f1ec;
+  --color-surface: #fffcf7;
+  --color-surface-2: #ebe6dc;
+  --color-ink: #16181b;
+  --color-ink-soft: #3d4248;
+  --color-muted: #6d737a;
+  --color-line: #ddd6c8;
+  --color-accent: #b91c1c;
+  --color-accent-hover: #9f1818;
+  --color-accent-fg: #fffaf5;
+  --color-hero: #8f1420;
+  --color-sold: #0f766e;
+  --color-lost: #9f1239;
+  --color-warn: #b45309;
+  --color-info: #1e4d6b;
+  --color-new: #1d4ed8;
+
+  --color-background: #f3f1ec;
+  --color-foreground: #16181b;
+  --color-card: #fffcf7;
+  --color-card-foreground: #16181b;
+  --color-primary: #b91c1c;
+  --color-primary-foreground: #fffaf5;
+  --color-secondary: #ebe6dc;
+  --color-secondary-foreground: #16181b;
+  --color-muted-foreground: #6d737a;
+  --color-border: #ddd6c8;
+  --color-input: #ddd6c8;
+  --color-ring: #b91c1c;
+  --color-destructive: #9f1239;
+  --color-destructive-foreground: #fffaf5;
+  --color-accent-foreground: #fffaf5;
+  --color-popover: #fffcf7;
+  --color-popover-foreground: #16181b;
+
+  --color-chart-1: #b91c1c;
+  --color-chart-2: #1e4d6b;
+  --color-chart-3: #0f766e;
+  --color-chart-4: #b45309;
+  --color-chart-5: #57534e;
+
+  --radius: 0.75rem;
+  --radius-xs: 0.25rem;
+  --radius-sm: 0.5rem;
+  --radius-md: 0.75rem;
+  --radius-lg: 1rem;
+  --radius-xl: 1.5rem;
+
+  --shadow-card: 0 1px 0 rgba(22, 24, 27, 0.04), 0 10px 28px -18px rgba(22, 24, 27, 0.28);
+}
+
+@layer base {
+  * {
+    border-color: var(--color-line);
+  }
+
+  html {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  body {
+    background: var(--color-bg);
+    color: var(--color-ink);
+    font-family: var(--font-sans);
+    min-height: 100dvh;
+  }
+
+  h1, h2, h3 {
+    text-wrap: balance;
+    font-family: var(--font-display);
+    letter-spacing: 0.01em;
+  }
+
+  p {
+    text-wrap: pretty;
+  }
+
+  button:not(:disabled),
+  [role="button"]:not(:disabled) {
+    cursor: pointer;
+  }
+
+  input, select, textarea {
+    font: inherit;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+.font-display {
+  font-family: var(--font-display);
+}
+
+.status-new { color: var(--color-new); background: color-mix(in oklab, var(--color-new) 12%, white); }
+.status-follow-up { color: var(--color-info); background: color-mix(in oklab, var(--color-info) 12%, white); }
+.status-interested { color: #155e75; background: #ecfeff; }
+.status-negotiation { color: var(--color-warn); background: color-mix(in oklab, var(--color-warn) 12%, white); }
+.status-booked { color: #6b21a8; background: #f5f3ff; }
+.status-sold { color: var(--color-sold); background: color-mix(in oklab, var(--color-sold) 12%, white); }
+.status-lost { color: var(--color-lost); background: color-mix(in oklab, var(--color-lost) 12%, white); }
+.status-pending { color: var(--color-warn); background: color-mix(in oklab, var(--color-warn) 12%, white); }
+.status-overdue { color: var(--color-accent); background: color-mix(in oklab, var(--color-accent) 12%, white); }

@@ -3,6 +3,7 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { type ReactNode, useState } from "react";
 import { toast } from "sonner";
 import { Authenticated } from "@/components/auth-gate";
+import { CallActions } from "@/components/call-button";
 import { EnquiryForm } from "@/components/enquiry-form";
 import { PageHeader } from "@/components/kpi";
 import { StatusBadge } from "@/components/ui/badge";
@@ -18,7 +19,7 @@ import {
 } from "@/lib/crm/enquiries";
 import { addFollowUp } from "@/lib/crm/followups";
 import type { SessionInfo } from "@/lib/crm/types";
-import { formatDate, formatDateTime, formatInr, todayIso } from "@/lib/utils";
+import { formatDate, formatDateTime, formatInr, telHref, todayIso } from "@/lib/utils";
 
 export const Route = createFileRoute("/enquiry/$id")({ component: EnquiryDetailPage });
 
@@ -80,6 +81,7 @@ function Detail({ id, session }: { id: string; session: SessionInfo }) {
         subtitle={`${enquiry.mobile} · ${enquiry.village || "—"}`}
         actions={
           <div className="flex flex-wrap gap-2">
+            <CallActions mobile={enquiry.mobile} />
             <Button variant="outline" onClick={() => setEditing((v) => !v)}>
               {editing ? "Close editor" : "Edit"}
             </Button>
@@ -102,7 +104,18 @@ function Detail({ id, session }: { id: string; session: SessionInfo }) {
         <div className="space-y-4">
           <Card>
             <CardContent className="grid grid-cols-2 gap-4 pt-5 text-sm">
-              <Field label="Vehicle" value={enquiry.vehicle} />
+              <Field
+                label="Mobile"
+                value={
+                  telHref(enquiry.mobile) ? (
+                    <a className="font-medium text-accent underline-offset-2 hover:underline" href={telHref(enquiry.mobile)!}>
+                      {enquiry.mobile}
+                    </a>
+                  ) : (
+                    enquiry.mobile
+                  )
+                }
+              />
               <Field label="Status" value={<StatusBadge status={enquiry.status} />} />
               <Field label="Purchase mode" value={enquiry.purchase_mode} />
               <Field label="Lead source" value={enquiry.lead_source} />

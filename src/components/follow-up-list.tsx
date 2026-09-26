@@ -1,4 +1,5 @@
 import { Link } from "@tanstack/react-router";
+import { CallActions } from "@/components/call-button";
 import { StatusBadge } from "@/components/ui/badge";
 import type { FollowUp } from "@/lib/crm/types";
 import { formatDate } from "@/lib/utils";
@@ -16,28 +17,25 @@ export function FollowUpList({
   return (
     <ul className="divide-y divide-line">
       {items.map((item) => (
-        <li key={`${item.enquiry_id}-${item.follow_up_date}-${item.customer_name}`}>
+        <li key={`${item.enquiry_id}-${item.follow_up_date}-${item.customer_name}`} className="flex items-center gap-2 py-3">
           <Link
             to="/enquiry/$id"
             params={{ id: item.enquiry_id }}
-            className="flex items-center justify-between gap-3 py-3"
+            className="min-w-0 flex-1"
           >
-            <div className="min-w-0">
-              <p className="truncate font-medium text-ink">{item.customer_name}</p>
-              <p className="truncate text-xs text-muted">
-                {item.mobile} · {item.vehicle}
-                {item.staff_name ? ` · ${item.staff_name}` : ""}
-              </p>
-            </div>
-            <div className="shrink-0 text-right">
-              <p className="text-xs tabular-nums text-ink-soft">{formatDate(item.follow_up_date)}</p>
-              {item.enquiry_status ? (
-                <div className="mt-1 flex justify-end">
-                  <StatusBadge status={item.enquiry_status} />
-                </div>
-              ) : null}
-            </div>
+            <p className="truncate font-medium text-ink">{item.customer_name}</p>
+            <p className="truncate text-xs text-muted">
+              {item.mobile} · {item.vehicle}
+              {item.staff_name ? ` · ${item.staff_name}` : ""}
+            </p>
+            <p className="mt-1 text-xs tabular-nums text-ink-soft">{formatDate(item.follow_up_date)}</p>
+            {item.enquiry_status ? (
+              <div className="mt-1">
+                <StatusBadge status={item.enquiry_status} />
+              </div>
+            ) : null}
           </Link>
+          <CallActions mobile={item.mobile} size="icon" />
         </li>
       ))}
     </ul>

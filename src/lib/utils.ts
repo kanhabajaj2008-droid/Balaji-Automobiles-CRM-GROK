@@ -70,6 +70,21 @@ export function isValidMobile(raw: string): boolean {
   return /^[6-9]\d{9}$/.test(normalizeMobile(raw));
 }
 
+/** Dialable Indian mobile, or null if the number is not 10 digits. */
+export function telHref(raw: string | null | undefined): string | null {
+  if (!raw) return null;
+  const n = normalizeMobile(raw);
+  if (n.length !== 10) return null;
+  return `tel:+91${n}`;
+}
+
+export function whatsappHref(raw: string | null | undefined): string | null {
+  if (!raw) return null;
+  const n = normalizeMobile(raw);
+  if (n.length !== 10) return null;
+  return `https://wa.me/91${n}`;
+}
+
 export function downloadTextFile(filename: string, contents: string, mime: string) {
   const blob = new Blob([contents], { type: mime });
   const url = URL.createObjectURL(blob);

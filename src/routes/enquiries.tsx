@@ -2,6 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { Authenticated } from "@/components/auth-gate";
+import { CallActions } from "@/components/call-button";
 import { PageHeader, LiveBadge } from "@/components/kpi";
 import { StatusBadge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -108,29 +109,33 @@ function Enquiries({
 
       <div className="space-y-3 lg:hidden">
         {rows.map((e) => (
-          <Link
-            key={e.id}
-            to="/enquiry/$id"
-            params={{ id: e.id }}
-            className="block rounded-xl border border-line bg-surface p-4"
-          >
-            <div className="flex items-start justify-between gap-3">
-              <div>
-                <p className="font-medium text-ink">{e.customer_name}</p>
-                <p className="text-xs text-muted">
-                  {e.mobile} · {e.village || "—"}
-                </p>
+          <div key={e.id} className="flex items-stretch gap-2">
+            <Link
+              to="/enquiry/$id"
+              params={{ id: e.id }}
+              className="min-w-0 flex-1 rounded-xl border border-line bg-surface p-4"
+            >
+              <div className="flex items-start justify-between gap-3">
+                <div>
+                  <p className="font-medium text-ink">{e.customer_name}</p>
+                  <p className="text-xs text-muted">
+                    {e.mobile} · {e.village || "—"}
+                  </p>
+                </div>
+                <StatusBadge status={e.status} />
               </div>
-              <StatusBadge status={e.status} />
+              <p className="mt-2 text-sm text-ink-soft">
+                {e.vehicle} · {e.purchase_mode}
+              </p>
+              <p className="mt-1 text-xs text-muted">
+                Follow-up {formatDate(e.next_follow_up)}
+                {e.is_demo ? " · Demo" : ""}
+              </p>
+            </Link>
+            <div className="flex flex-col justify-center gap-2">
+              <CallActions mobile={e.mobile} size="icon" />
             </div>
-            <p className="mt-2 text-sm text-ink-soft">
-              {e.vehicle} · {e.purchase_mode}
-            </p>
-            <p className="mt-1 text-xs text-muted">
-              Follow-up {formatDate(e.next_follow_up)}
-              {e.is_demo ? " · Demo" : ""}
-            </p>
-          </Link>
+          </div>
         ))}
         {rows.length === 0 ? <p className="text-sm text-muted">No matching enquiries.</p> : null}
       </div>
@@ -145,6 +150,7 @@ function Enquiries({
               <th className="px-4 py-3">Staff</th>
               <th className="px-4 py-3">Follow-up</th>
               <th className="px-4 py-3">Value</th>
+              <th className="px-4 py-3">Call</th>
             </tr>
           </thead>
           <tbody>
@@ -166,6 +172,9 @@ function Enquiries({
                 <td className="px-4 py-3">{e.assigned_to_name ?? "—"}</td>
                 <td className="px-4 py-3 tabular-nums">{formatDate(e.next_follow_up)}</td>
                 <td className="px-4 py-3 tabular-nums">{formatInr(e.estimated_value)}</td>
+                <td className="px-4 py-3">
+                  <CallActions mobile={e.mobile} size="sm" />
+                </td>
               </tr>
             ))}
           </tbody>

@@ -60,7 +60,7 @@ function Dashboard({ owner }: { owner: boolean }) {
         subtitle={
           owner
             ? "Every enquiry across the floor — appears here as soon as staff save it"
-            : "Only the customers assigned to you"
+            : "Your customers, plus every follow-up due today or overdue for the showroom"
         }
         actions={
           <div className="flex items-center gap-2">

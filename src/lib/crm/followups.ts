@@ -71,13 +71,7 @@ export const addFollowUp = createServerFn({ method: "POST" })
 export const listFollowUpBoard = createServerFn({ method: "GET" })
   .middleware([authMiddleware])
   .handler(async ({ context }) => {
-    const { sql, profile } = await requireCrmUser(context.userId);
-    const params: unknown[] = [];
-    let access = "";
-    if (profile.role !== "owner") {
-      params.push(profile.user_id);
-      access = `and (e.assigned_to = $1 or e.created_by = $1)`;
-    }
+    const { sql } = await requireCrmUser(context.userId);
 
     const rows = await sql.query<FollowUp>(
       `select
@@ -100,9 +94,7 @@ export const listFollowUpBoard = createServerFn({ method: "GET" })
        left join profiles p on p.user_id = e.assigned_to
        where e.next_follow_up is not null
          and e.status not in ('Sold', 'Lost')
-         ${access}
        order by e.next_follow_up asc, e.next_follow_up_time asc nulls last`,
-      params,
     );
 
     const today = new Date();

@@ -235,9 +235,11 @@ export function requireOwner(profile: Profile) {
   }
 }
 
-export function canAccessEnquiry(profile: Profile, enquiry: { assigned_to: string | null; created_by: string }) {
+export function canAccessEnquiry(profile: Profile, enquiry: { assigned_to: string | null; created_by: string; status?: string }) {
   if (profile.role === "owner") return true;
-  return enquiry.assigned_to === profile.user_id || enquiry.created_by === profile.user_id;
+  if (enquiry.assigned_to === profile.user_id || enquiry.created_by === profile.user_id) return true;
+  // Any staff can work open follow-ups (today, overdue, upcoming) on the floor.
+  return enquiry.status !== "Sold" && enquiry.status !== "Lost";
 }
 
 export async function loadEnquiry(

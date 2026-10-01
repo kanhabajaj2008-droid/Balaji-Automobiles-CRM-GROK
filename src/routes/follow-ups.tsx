@@ -30,7 +30,7 @@ function Board() {
     <div>
       <PageHeader
         title="Follow-ups"
-        subtitle="Work the overdue list first, then today, then upcoming"
+        subtitle="Every showroom follow-up — overdue first, then today, then upcoming. Any staff can call and log it."
       />
       <div className="grid gap-4 lg:grid-cols-3">
         <Card className="border-accent/30">

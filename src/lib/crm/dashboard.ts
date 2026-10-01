@@ -52,10 +52,8 @@ export const getDashboard = createServerFn({ method: "POST" })
       sold_value: 0,
     };
 
-    const followParams = isOwner ? [] : [profile.user_id];
-    const followAccess = isOwner
-      ? ""
-      : "and (assigned_to = $1 or created_by = $1)";
+    const followParams: unknown[] = [];
+    const followAccess = "";
 
     const followCounts = await sql.query<{ today: number; overdue: number; open: number }>(
       `select

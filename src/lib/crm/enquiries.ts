@@ -64,7 +64,9 @@ export const listEnquiries = createServerFn({ method: "POST" })
     if (profile.role !== "owner") {
       params.push(profile.user_id);
       const i = params.length;
-      where.push(`(e.assigned_to = $${i} OR e.created_by = $${i})`);
+      where.push(
+        `(e.assigned_to = $${i} OR e.created_by = $${i} OR (e.next_follow_up is not null AND e.status not in ('Sold','Lost')))`,
+      );
     }
 
     if (f.q?.trim()) {
@@ -182,16 +184,12 @@ export const checkDuplicateMobile = createServerFn({ method: "POST" })
     z.object({ mobile: z.string(), excludeId: z.string().optional() }).parse(input),
   )
   .handler(async ({ context, data }) => {
-    const { sql, profile } = await requireCrmUser(context.userId);
+    const { sql } = await requireCrmUser(context.userId);
     const mobile = normalizeMobile(data.mobile);
     if (!isValidMobile(mobile)) return { matches: [] as Enquiry[] };
 
     const params: unknown[] = [mobile];
     let extra = "";
-    if (profile.role !== "owner") {
-      params.push(profile.user_id);
-      extra += ` and (assigned_to = $2 or created_by = $2)`;
-    }
     if (data.excludeId) {
       params.push(data.excludeId);
       extra += ` and id <> $${params.length}`;

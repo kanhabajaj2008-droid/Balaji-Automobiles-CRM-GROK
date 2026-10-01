@@ -52,7 +52,7 @@ function Enquiries({
         subtitle={
           owner
             ? "Full customer book — staff saves, you see it here"
-            : "Your assigned and created enquiries"
+            : "Your enquiries, plus every customer who needs a follow-up today or is overdue"
         }
         actions={
           <div className="flex items-center gap-2">

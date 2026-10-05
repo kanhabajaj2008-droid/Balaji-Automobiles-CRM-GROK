@@ -17,6 +17,7 @@ import {
   PURCHASE_MODES,
   VEHICLES,
 } from "./constants";
+import { replaceEnquiryTags } from "./tags";
 import type { AssignmentHistory, AuditRow, Enquiry, EnquiryDetail, EnquiryFilters, FollowUp } from "./types";
 
 const filtersSchema = z.object({
@@ -30,6 +31,7 @@ const filtersSchema = z.object({
   to: z.string().optional(),
   followUpFrom: z.string().optional(),
   followUpTo: z.string().optional(),
+  tagId: z.string().optional(),
 });
 
 const enquiryInput = z.object({
@@ -50,6 +52,7 @@ const enquiryInput = z.object({
   exchange_required: z.boolean().optional(),
   exchange_vehicle: z.string().nullable().optional(),
   notes: z.string().nullable().optional(),
+  tagIds: z.array(z.string()).optional(),
 });
 
 export const listEnquiries = createServerFn({ method: "POST" })
@@ -62,11 +65,15 @@ export const listEnquiries = createServerFn({ method: "POST" })
     const where: string[] = [];
 
     if (profile.role !== "owner") {
-      params.push(profile.user_id);
-      const i = params.length;
-      where.push(
-        `(e.assigned_to = $${i} OR e.created_by = $${i} OR (e.next_follow_up is not null AND e.status not in ('Sold','Lost')))`,
-      );
+      if (f.tagId) {
+        /* tagged campaign lists are shared so any staff can follow them up */
+      } else {
+        params.push(profile.user_id);
+        const i = params.length;
+        where.push(
+          `(e.assigned_to = $${i} OR e.created_by = $${i} OR (e.next_follow_up is not null AND e.status not in ('Sold','Lost')))`,
+        );
+      }
     }
 
     if (f.q?.trim()) {
@@ -111,6 +118,12 @@ export const listEnquiries = createServerFn({ method: "POST" })
     if (f.followUpTo) {
       params.push(f.followUpTo);
       where.push(`e.next_follow_up <= $${params.length}`);
+    }
+    if (f.tagId) {
+      params.push(f.tagId);
+      where.push(
+        `exists (select 1 from enquiry_tags et where et.enquiry_id = e.id and et.tag_id = $${params.length})`,
+      );
     }
 
     const clause = where.length ? `where ${where.join(" and ")}` : "";
@@ -294,6 +307,7 @@ export const saveEnquiry = createServerFn({ method: "POST" })
         entityId: data.id,
         details: `Updated ${data.customer_name}`,
       });
+      if (data.tagIds) await replaceEnquiryTags(sql, data.id, data.tagIds);
       return { id: data.id };
     }
 
@@ -340,6 +354,7 @@ export const saveEnquiry = createServerFn({ method: "POST" })
         values (${newId()}, ${id}, ${null}, ${assignedTo}, ${profile.user_id})
       `;
     }
+    if (data.tagIds?.length) await replaceEnquiryTags(sql, id, data.tagIds);
     return { id };
   });
 

@@ -1,6 +1,6 @@
 import { getSql, type Sql } from "@/lib/db";
 import { newId } from "@/lib/utils";
-import type { Enquiry, Profile, ShowroomSettings } from "./types";
+import type { Enquiry, Profile, ShowroomSettings, Tag } from "./types";
 import { seedDemoEnquiries } from "./seed";
 
 export class ForbiddenError extends Error {
@@ -271,7 +271,16 @@ export async function loadEnquiry(
       e.notes,
       e.is_demo,
       e.created_at::text as created_at,
-      e.updated_at::text as updated_at
+      e.updated_at::text as updated_at,
+      (
+        select coalesce(
+          json_agg(json_build_object('id', t.id, 'name', t.name) order by lower(t.name)),
+          '[]'::json
+        )
+        from enquiry_tags et
+        join tags t on t.id = et.tag_id
+        where et.enquiry_id = e.id
+      ) as tags
     from enquiries e
     left join profiles ap on ap.user_id = e.assigned_to
     left join profiles cp on cp.user_id = e.created_by
@@ -286,7 +295,30 @@ export async function loadEnquiry(
   return enquiry;
 }
 
-type RawEnquiry = Omit<Enquiry, "estimated_value"> & { estimated_value: string | number | null };
+type RawEnquiry = Omit<Enquiry, "estimated_value" | "tags"> & {
+  estimated_value: string | number | null;
+  tags?: unknown;
+};
+
+export function parseTags(raw: unknown): Tag[] {
+  let value: unknown = raw;
+  if (typeof value === "string") {
+    try {
+      value = JSON.parse(value);
+    } catch {
+      return [];
+    }
+  }
+  if (!Array.isArray(value)) return [];
+  return value
+    .map((item) => {
+      if (!item || typeof item !== "object") return null;
+      const row = item as { id?: unknown; name?: unknown };
+      if (typeof row.id !== "string" || typeof row.name !== "string") return null;
+      return { id: row.id, name: row.name };
+    })
+    .filter((t): t is Tag => Boolean(t));
+}
 
 export function mapEnquiry(raw: RawEnquiry): Enquiry {
   return {
@@ -297,6 +329,7 @@ export function mapEnquiry(raw: RawEnquiry): Enquiry {
         : Number(raw.estimated_value),
     exchange_required: Boolean(raw.exchange_required),
     is_demo: Boolean(raw.is_demo),
+    tags: parseTags(raw.tags),
   };
 }
 
@@ -323,7 +356,16 @@ export const ENQUIRY_SELECT = `
     e.notes,
     e.is_demo,
     e.created_at::text as created_at,
-    e.updated_at::text as updated_at
+    e.updated_at::text as updated_at,
+    (
+      select coalesce(
+        json_agg(json_build_object('id', t.id, 'name', t.name) order by lower(t.name)),
+        '[]'::json
+      )
+      from enquiry_tags et
+      join tags t on t.id = et.tag_id
+      where et.enquiry_id = e.id
+    ) as tags
 `;
 
 export async function writeAudit(

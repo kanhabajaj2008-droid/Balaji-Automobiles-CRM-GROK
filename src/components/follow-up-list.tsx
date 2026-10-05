@@ -1,5 +1,6 @@
 import { Link } from "@tanstack/react-router";
 import { CallActions } from "@/components/call-button";
+import { TagChips } from "@/components/tag-picker";
 import { StatusBadge } from "@/components/ui/badge";
 import type { FollowUp } from "@/lib/crm/types";
 import { formatDate } from "@/lib/utils";
@@ -30,10 +31,15 @@ export function FollowUpList({
             </p>
             <p className="mt-1 text-xs tabular-nums text-ink-soft">{formatDate(item.follow_up_date)}</p>
             {item.enquiry_status ? (
-              <div className="mt-1">
+              <div className="mt-1 flex flex-wrap items-center gap-1">
                 <StatusBadge status={item.enquiry_status} />
+                <TagChips tags={item.tags} />
               </div>
-            ) : null}
+            ) : (
+              <div className="mt-1">
+                <TagChips tags={item.tags} />
+              </div>
+            )}
           </Link>
           <CallActions mobile={item.mobile} size="icon" />
         </li>

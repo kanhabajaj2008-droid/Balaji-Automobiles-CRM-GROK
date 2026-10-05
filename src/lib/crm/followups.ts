@@ -2,7 +2,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { authMiddleware } from "@/lib/auth/middleware";
 import { newId } from "@/lib/utils";
-import { loadEnquiry, requireCrmUser, writeAudit } from "./authz";
+import { loadEnquiry, parseTags, requireCrmUser, writeAudit } from "./authz";
 import { FOLLOW_UP_STATUSES } from "./constants";
 import type { FollowUp } from "./types";
 
@@ -68,12 +68,19 @@ export const addFollowUp = createServerFn({ method: "POST" })
     return { id };
   });
 
-export const listFollowUpBoard = createServerFn({ method: "GET" })
+export const listFollowUpBoard = createServerFn({ method: "POST" })
   .middleware([authMiddleware])
-  .handler(async ({ context }) => {
+  .validator((input: unknown) => z.object({ tagId: z.string().optional() }).parse(input ?? {}))
+  .handler(async ({ context, data }) => {
     const { sql } = await requireCrmUser(context.userId);
+    const params: unknown[] = [];
+    let tagFilter = "";
+    if (data.tagId) {
+      params.push(data.tagId);
+      tagFilter = `and exists (select 1 from enquiry_tags et where et.enquiry_id = e.id and et.tag_id = $1)`;
+    }
 
-    const rows = await sql.query<FollowUp>(
+    const rows = await sql.query<FollowUp & { tags?: unknown }>(
       `select
          e.id as enquiry_id,
          e.customer_name,
@@ -89,20 +96,33 @@ export const listFollowUpBoard = createServerFn({ method: "GET" })
          e.notes,
          e.next_follow_up::text as next_follow_up_date,
          e.next_follow_up_time,
-         e.updated_at::text as created_at
+         e.updated_at::text as created_at,
+         (
+           select coalesce(
+             json_agg(json_build_object('id', t.id, 'name', t.name) order by lower(t.name)),
+             '[]'::json
+           )
+           from enquiry_tags et
+           join tags t on t.id = et.tag_id
+           where et.enquiry_id = e.id
+         ) as tags
        from enquiries e
        left join profiles p on p.user_id = e.assigned_to
        where e.next_follow_up is not null
          and e.status not in ('Sold', 'Lost')
+         ${tagFilter}
        order by e.next_follow_up asc, e.next_follow_up_time asc nulls last`,
+      params,
     );
+
+    const mapped = rows.map((r) => ({ ...r, tags: parseTags(r.tags) }));
 
     const today = new Date();
     const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`;
 
-    const overdue = rows.filter((r) => r.follow_up_date < todayStr);
-    const todayList = rows.filter((r) => r.follow_up_date === todayStr);
-    const upcoming = rows.filter((r) => r.follow_up_date > todayStr).slice(0, 80);
+    const overdue = mapped.filter((r) => r.follow_up_date < todayStr);
+    const todayList = mapped.filter((r) => r.follow_up_date === todayStr);
+    const upcoming = mapped.filter((r) => r.follow_up_date > todayStr).slice(0, 80);
 
     return { overdue, today: todayList, upcoming };
   });

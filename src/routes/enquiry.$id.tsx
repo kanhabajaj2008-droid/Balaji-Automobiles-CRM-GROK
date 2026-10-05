@@ -4,6 +4,7 @@ import { type ReactNode, useState } from "react";
 import { toast } from "sonner";
 import { Authenticated } from "@/components/auth-gate";
 import { CallActions } from "@/components/call-button";
+import { TagChips, TagPicker } from "@/components/tag-picker";
 import { EnquiryForm } from "@/components/enquiry-form";
 import { PageHeader } from "@/components/kpi";
 import { StatusBadge } from "@/components/ui/badge";
@@ -18,6 +19,7 @@ import {
   updateEnquiryStatus,
 } from "@/lib/crm/enquiries";
 import { addFollowUp } from "@/lib/crm/followups";
+import { setEnquiryTags } from "@/lib/crm/tags";
 import type { SessionInfo } from "@/lib/crm/types";
 import { formatDate, formatDateTime, formatInr, telHref, todayIso } from "@/lib/utils";
 
@@ -50,6 +52,17 @@ function Detail({ id, session }: { id: string; session: SessionInfo }) {
     onSuccess: () => {
       toast.success("Enquiry deleted");
       navigate({ to: "/enquiries" });
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
+  const tagsMut = useMutation({
+    mutationFn: (tagIds: string[]) => setEnquiryTags({ data: { enquiryId: id, tagIds } }),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: ["enquiry", id] });
+      void qc.invalidateQueries({ queryKey: ["enquiries"] });
+      void qc.invalidateQueries({ queryKey: ["follow-board"] });
+      void qc.invalidateQueries({ queryKey: ["tags"] });
     },
     onError: (e: Error) => toast.error(e.message),
   });
@@ -100,6 +113,20 @@ function Detail({ id, session }: { id: string; session: SessionInfo }) {
         </p>
       ) : null}
 
+      {!editing ? (
+        <Card className="mb-4">
+          <CardHeader>
+            <CardTitle>Tags</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <TagPicker
+              selectedIds={(enquiry.tags ?? []).map((t) => t.id)}
+              onChange={(ids) => tagsMut.mutate(ids)}
+            />
+          </CardContent>
+        </Card>
+      ) : null}
+
       <div className="grid gap-4 lg:grid-cols-[1.1fr_0.9fr]">
         <div className="space-y-4">
           <Card>
@@ -119,6 +146,9 @@ function Detail({ id, session }: { id: string; session: SessionInfo }) {
               <Field label="Status" value={<StatusBadge status={enquiry.status} />} />
               <Field label="Purchase mode" value={enquiry.purchase_mode} />
               <Field label="Lead source" value={enquiry.lead_source} />
+              <div className="col-span-2">
+                <Field label="Tags" value={enquiry.tags?.length ? <TagChips tags={enquiry.tags} /> : "—"} />
+              </div>
               <Field label="Enquiry date" value={formatDate(enquiry.enquiry_date)} />
               <Field label="Expected delivery" value={formatDate(enquiry.expected_delivery)} />
               <Field label="Assigned to" value={enquiry.assigned_to_name ?? "—"} />

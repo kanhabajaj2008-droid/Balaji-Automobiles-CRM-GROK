@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ENQUIRY_STATUSES, LEAD_SOURCES, LIVE_POLL_MS, PURCHASE_MODES, VEHICLES } from "@/lib/crm/constants";
 import { listEnquiries } from "@/lib/crm/enquiries";
+import { TagChips, TagFilterBar } from "@/components/tag-picker";
 import { formatDate, formatInr } from "@/lib/utils";
 
 export const Route = createFileRoute("/enquiries")({ component: EnquiriesPage });
@@ -30,10 +31,11 @@ function Enquiries({
   const [staffId, setStaffId] = useState("");
   const [purchaseMode, setPurchaseMode] = useState("");
   const [leadSource, setLeadSource] = useState("");
+  const [tagId, setTagId] = useState("");
 
   const filters = useMemo(
-    () => ({ q, status, vehicle, staffId, purchaseMode, leadSource }),
-    [q, status, vehicle, staffId, purchaseMode, leadSource],
+    () => ({ q, status, vehicle, staffId, purchaseMode, leadSource, tagId }),
+    [q, status, vehicle, staffId, purchaseMode, leadSource, tagId],
   );
 
   const list = useQuery({
@@ -63,6 +65,8 @@ function Enquiries({
           </div>
         }
       />
+
+      <TagFilterBar value={tagId} onChange={setTagId} />
 
       <div className="mb-4 grid grid-cols-2 gap-2 lg:grid-cols-6">
         <Input
@@ -131,6 +135,9 @@ function Enquiries({
                 Follow-up {formatDate(e.next_follow_up)}
                 {e.is_demo ? " · Demo" : ""}
               </p>
+              <div className="mt-2">
+                <TagChips tags={e.tags} />
+              </div>
             </Link>
             <div className="flex flex-col justify-center gap-2">
               <CallActions mobile={e.mobile} size="icon" />
@@ -163,6 +170,9 @@ function Enquiries({
                   <div className="text-xs text-muted">
                     {e.mobile}
                     {e.is_demo ? " · Demo" : ""}
+                  </div>
+                  <div className="mt-1">
+                    <TagChips tags={e.tags} />
                   </div>
                 </td>
                 <td className="px-4 py-3">{e.vehicle}</td>

@@ -31,6 +31,13 @@ export type StaffOption = {
   active: boolean;
 };
 
+export type Tag = {
+  id: string;
+  name: string;
+  created_at?: string;
+  enquiry_count?: number;
+};
+
 export type Enquiry = {
   id: string;
   enquiry_date: string;
@@ -53,6 +60,7 @@ export type Enquiry = {
   exchange_vehicle: string | null;
   notes: string | null;
   is_demo: boolean;
+  tags: Tag[];
   created_at: string;
   updated_at: string;
 };
@@ -73,6 +81,7 @@ export type FollowUp = {
   mobile?: string;
   vehicle?: string;
   enquiry_status?: EnquiryStatus;
+  tags?: Tag[];
 };
 
 export type AuditRow = {
@@ -146,6 +155,7 @@ export type EnquiryFilters = {
   to?: string;
   followUpFrom?: string;
   followUpTo?: string;
+  tagId?: string;
 };
 
 export type SessionInfo = {

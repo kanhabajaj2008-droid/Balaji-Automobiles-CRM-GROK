@@ -11,6 +11,7 @@ import {
 } from "@/lib/crm/constants";
 import { checkDuplicateMobile, saveEnquiry } from "@/lib/crm/enquiries";
 import type { Enquiry, SessionInfo } from "@/lib/crm/types";
+import { TagPicker } from "@/components/tag-picker";
 import { isValidMobile, normalizeMobile, todayIso } from "@/lib/utils";
 
 type Values = {
@@ -63,10 +64,12 @@ export function EnquiryForm({
   onSaved: (id: string) => void;
 }) {
   const [values, setValues] = useState<Values>(() => fromEnquiry(enquiry, session));
+  const [tagIds, setTagIds] = useState<string[]>(() => (enquiry?.tags ?? []).map((t) => t.id));
   const [dupes, setDupes] = useState<Enquiry[]>([]);
 
   useEffect(() => {
     setValues(fromEnquiry(enquiry, session));
+    setTagIds((enquiry?.tags ?? []).map((t) => t.id));
   }, [enquiry, session]);
 
   function set<K extends keyof Values>(key: K, value: Values[K]) {
@@ -101,6 +104,7 @@ export function EnquiryForm({
           exchange_required: exchange,
           exchange_vehicle: values.exchange_vehicle || null,
           notes: values.notes || null,
+          tagIds,
         },
       });
     },
@@ -302,6 +306,11 @@ export function EnquiryForm({
             onChange={(e) => set("exchange_vehicle", e.target.value)}
             placeholder="Make, year, km, condition"
           />
+        </div>
+        <div className={`${field} sm:col-span-2`}>
+          <Label>Tags</Label>
+          <TagPicker selectedIds={tagIds} onChange={setTagIds} />
+          <p className="text-xs text-muted">Create a tag like Navratri, then tick it on each customer in that campaign.</p>
         </div>
         <div className={`${field} sm:col-span-2`}>
           <Label htmlFor="notes">Notes</Label>

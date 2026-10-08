@@ -1,5 +1,7 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" role="img" aria-label="BALAJI AUTOMOBILES">
-  <rect width="32" height="32" rx="8" fill="#B91C1C"/>
-  <circle cx="16" cy="16" r="12.5" fill="none" stroke="#F3F1EC" stroke-width="1.8"/>
-  <text x="16" y="21" font-family="Arial Black, Helvetica Neue, Helvetica, Arial, sans-serif" font-size="11.5" font-weight="800" fill="#F3F1EC" text-anchor="middle" letter-spacing="-0.7">BA</text>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="BALAJI SALES APP">
+  <rect width="64" height="64" rx="14" fill="#B51320"/>
+  <circle cx="22" cy="36" r="7" fill="none" stroke="#F7F1E4" stroke-width="3"/>
+  <circle cx="44" cy="36" r="7" fill="none" stroke="#F7F1E4" stroke-width="3"/>
+  <path d="M22 36h8l6-10h8l4 10" fill="none" stroke="#F7F1E4" stroke-width="3" stroke-linejoin="round"/>
+  <text x="32" y="56" text-anchor="middle" font-family="Arial Black, Arial, sans-serif" font-size="11" font-weight="800" fill="#F7F1E4">BA</text>
 </svg>

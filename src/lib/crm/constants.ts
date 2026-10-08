@@ -1,4 +1,4 @@
-export const APP_NAME = "BALAJI AUTOMOBILES";
+export const APP_NAME = "BALAJI SALES APP";
 export const APP_TAGLINE = "Sales Enquiry & Customer CRM";
 
 /** How often owner/staff screens pull shared enquiry data (ms). */

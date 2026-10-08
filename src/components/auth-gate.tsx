@@ -3,6 +3,7 @@ import { RedirectToSignIn } from "@/lib/auth/gates";
 import { signOut } from "@/lib/auth/client";
 import { useCurrentUserState } from "@/lib/auth/use-current-user";
 import { getSessionInfo } from "@/lib/crm/session";
+import { APP_NAME } from "@/lib/crm/constants";
 import { AppShell } from "@/components/layout/app-shell";
 import { Button } from "@/components/ui/button";
 import type { SessionInfo } from "@/lib/crm/types";
@@ -44,8 +45,9 @@ export function Authenticated({
     return (
       <main className="grid min-h-dvh place-items-center bg-bg px-6 text-center">
         <div className="max-w-md">
+          <img src="/logo.png" alt="" className="mx-auto mb-3 size-16 rounded-2xl" />
           <p className="text-xs font-semibold uppercase tracking-[0.22em] text-accent">
-            BALAJI AUTOMOBILES
+            {APP_NAME}
           </p>
           <h1 className="mt-2 font-display text-3xl text-ink">Couldn’t open the CRM</h1>
           <p className="mt-2 text-sm text-muted">{errorMessage(session.error)}</p>
@@ -84,10 +86,11 @@ function BootSkeleton() {
   return (
     <div className="grid min-h-dvh place-items-center bg-bg p-6">
       <div className="w-full max-w-md text-center">
+        <img src="/logo.png" alt="" className="mx-auto mb-4 size-20 rounded-2xl" />
         <p className="text-xs font-semibold uppercase tracking-[0.22em] text-accent">
           Hero MotoCorp dealer
         </p>
-        <h1 className="mt-2 font-display text-4xl text-ink">BALAJI AUTOMOBILES</h1>
+        <h1 className="mt-2 font-display text-4xl text-ink">{APP_NAME}</h1>
         <p className="mt-2 text-sm text-muted">Sales Enquiry & Customer CRM</p>
         <div className="mt-6 grid grid-cols-2 gap-3">
           {Array.from({ length: 4 }).map((_, i) => (

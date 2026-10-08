@@ -16,10 +16,11 @@ export const Route = createRootRoute({
       { name: "theme-color", content: "#B91C1C" },
       {
         name: "description",
-        content: "Sales enquiry and customer CRM for BALAJI AUTOMOBILES, Hero MotoCorp showroom.",
+        content: "Sales enquiry and customer CRM — BALAJI SALES APP.",
       },
     ],
     links: [
+      { rel: "icon", type: "image/png", href: "/icon-192.png" },
       { rel: "icon", type: "image/svg+xml", href: "/favicon.svg" },
       { rel: "stylesheet", href: appCss },
       { rel: "manifest", href: "/__grok/manifest.webmanifest" },

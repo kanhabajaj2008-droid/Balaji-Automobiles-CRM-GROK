@@ -65,6 +65,7 @@ function Login() {
           <div className="absolute bottom-0 right-0 h-64 w-full bg-gradient-to-t from-black/40 to-transparent" />
         </div>
         <div className="relative">
+          <img src="/logo.png" alt="" className="mb-6 size-20 rounded-2xl" />
           <p className="text-xs font-semibold uppercase tracking-[0.28em] text-white/60">
             Hero MotoCorp dealer
           </p>
@@ -81,6 +82,7 @@ function Login() {
       <section className="flex items-center justify-center bg-bg px-5 py-10">
         <div className="w-full max-w-sm">
           <div className="mb-8 lg:hidden">
+            <img src="/logo.png" alt="" className="mb-3 size-16 rounded-2xl" />
             <p className="text-xs font-semibold uppercase tracking-[0.22em] text-accent">
               Hero MotoCorp dealer
             </p>

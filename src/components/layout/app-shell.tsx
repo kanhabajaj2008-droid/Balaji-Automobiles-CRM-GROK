@@ -54,12 +54,17 @@ export function AppShell({
   return (
     <div className="min-h-dvh bg-bg">
       <aside className="fixed inset-y-0 left-0 z-30 hidden w-60 flex-col border-r border-line bg-surface lg:flex">
-        <div className="border-b border-line px-5 py-5">
-          <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-accent">
-            Hero MotoCorp
-          </p>
-          <p className="font-display text-2xl leading-none text-ink">{APP_NAME}</p>
-          <p className="mt-2 text-xs text-muted">
+        <div className="border-b border-line px-4 py-4">
+          <div className="flex items-center gap-3">
+            <img src="/logo.png" alt="" className="size-12 rounded-xl" />
+            <div className="min-w-0">
+              <p className="font-display text-xl leading-none text-ink">{APP_NAME}</p>
+              <p className="mt-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-accent">
+                Hero MotoCorp
+              </p>
+            </div>
+          </div>
+          <p className="mt-3 text-xs text-muted">
             {session.profile.full_name} · {isOwner ? "Owner" : "Staff"}
           </p>
         </div>
@@ -88,9 +93,12 @@ export function AppShell({
       </aside>
 
       <header className="sticky top-0 z-20 flex items-center justify-between border-b border-line bg-surface/90 px-4 py-3 backdrop-blur lg:hidden">
-        <div>
-          <p className="font-display text-xl leading-none text-ink">{APP_NAME}</p>
-          <p className="text-[11px] text-muted">{isOwner ? "Owner" : "Staff"}</p>
+        <div className="flex min-w-0 items-center gap-2">
+          <img src="/logo.png" alt="" className="size-9 shrink-0 rounded-lg" />
+          <div className="min-w-0">
+            <p className="truncate font-display text-lg leading-none text-ink">{APP_NAME}</p>
+            <p className="text-[11px] text-muted">{isOwner ? "Owner" : "Staff"}</p>
+          </div>
         </div>
         <UserButton />
       </header>

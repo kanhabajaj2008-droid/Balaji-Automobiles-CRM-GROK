@@ -13,7 +13,8 @@ export const Route = createRootRoute({
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1, viewport-fit=cover" },
       { title: APP_NAME },
-      { name: "theme-color", content: "#B91C1C" },
+      { name: "apple-mobile-web-app-title", content: "BALAJI SALES APP" },
+      { name: "application-name", content: "BALAJI SALES APP" },
       {
         name: "description",
         content: "Sales enquiry and customer CRM — BALAJI SALES APP.",

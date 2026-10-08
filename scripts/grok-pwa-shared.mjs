@@ -152,22 +152,16 @@ export function stripInstallParams(url) {
 }
 
 export function renderInstallPageHtml(template, { host, url } = {}) {
+  const fromHost = appNameFromHost(host);
+  const name = fromHost === DEFAULT_APP_NAME ? "BALAJI SALES APP" : fromHost;
   return String(template)
-    .replaceAll("{{APP_NAME}}", escapeHtml(appNameFromHost(host)))
+    .replaceAll("{{APP_NAME}}", escapeHtml(name))
     .replaceAll("{{APP_URL}}", escapeHtml(stripInstallParams(url)));
 }
 
 export function renderWebManifest(hostHeader) {
   const fromHost = appNameFromHost(hostHeader);
-  let name = fromHost;
-  if (name === DEFAULT_APP_NAME) {
-    try {
-      const title = String(snapshotOgIdentity().site?.title ?? "").trim();
-      if (title && title !== DEFAULT_APP_NAME) name = title;
-    } catch {
-      /* site.json missing */
-    }
-  }
+  const name = fromHost === DEFAULT_APP_NAME ? "BALAJI SALES APP" : fromHost;
   return JSON.stringify(
     {
       name,
@@ -183,6 +177,19 @@ export function renderWebManifest(hostHeader) {
           src: "/__grok/icon-180.png",
           sizes: "180x180",
           type: "image/png",
+          purpose: "any",
+        },
+        {
+          src: "/icon-192.png",
+          sizes: "192x192",
+          type: "image/png",
+          purpose: "any",
+        },
+        {
+          src: "/icon-512.png",
+          sizes: "512x512",
+          type: "image/png",
+          purpose: "any",
         },
       ],
     },

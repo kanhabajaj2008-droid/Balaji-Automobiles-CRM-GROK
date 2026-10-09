@@ -213,7 +213,8 @@ export const checkDuplicateMobile = createServerFn({ method: "POST" })
        from enquiries e
        left join profiles ap on ap.user_id = e.assigned_to
        left join profiles cp on cp.user_id = e.created_by
-       where e.mobile = $1 and e.status not in ('Sold', 'Lost') ${extra}
+       where e.mobile = $1 ${extra}
+       order by e.updated_at desc
        limit 5`,
       params,
     );

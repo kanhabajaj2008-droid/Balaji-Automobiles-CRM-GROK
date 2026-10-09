@@ -1,5 +1,6 @@
 import { useMutation } from "@tanstack/react-query";
-import { useEffect, useState } from "react";
+import { Link } from "@tanstack/react-router";
+import { useEffect, useState, type FormEvent } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input, Label, Textarea } from "@/components/ui/input";
@@ -66,6 +67,9 @@ export function EnquiryForm({
   const [values, setValues] = useState<Values>(() => fromEnquiry(enquiry, session));
   const [tagIds, setTagIds] = useState<string[]>(() => (enquiry?.tags ?? []).map((t) => t.id));
   const [dupes, setDupes] = useState<Enquiry[]>([]);
+  const [askContinue, setAskContinue] = useState(false);
+  const [saveAfterConfirm, setSaveAfterConfirm] = useState(false);
+  const [confirmedMobile, setConfirmedMobile] = useState<string | null>(null);
 
   useEffect(() => {
     setValues(fromEnquiry(enquiry, session));
@@ -74,6 +78,24 @@ export function EnquiryForm({
 
   function set<K extends keyof Values>(key: K, value: Values[K]) {
     setValues((v) => ({ ...v, [key]: value }));
+    if (key === "mobile") setConfirmedMobile(null);
+  }
+
+  async function lookupMobile(raw: string) {
+    if (!isValidMobile(raw)) {
+      setDupes([]);
+      setAskContinue(false);
+      return [] as Enquiry[];
+    }
+    const res = await checkDuplicateMobile({
+      data: { mobile: raw, excludeId: enquiry?.id },
+    });
+    setDupes(res.matches);
+    const mobile = normalizeMobile(raw);
+    if (res.matches.length > 0 && mobile !== confirmedMobile) {
+      setAskContinue(true);
+    }
+    return res.matches;
   }
 
   const save = useMutation({
@@ -116,26 +138,28 @@ export function EnquiryForm({
   });
 
   async function onMobileBlur() {
+    await lookupMobile(values.mobile);
+  }
+
+  async function onSubmit(e: FormEvent) {
+    e.preventDefault();
     if (!isValidMobile(values.mobile)) {
-      setDupes([]);
+      toast.error("Enter a valid 10-digit Indian mobile number.");
       return;
     }
-    const res = await checkDuplicateMobile({
-      data: { mobile: values.mobile, excludeId: enquiry?.id },
-    });
-    setDupes(res.matches);
+    const matches = await lookupMobile(values.mobile);
+    if (matches.length > 0 && normalizeMobile(values.mobile) !== confirmedMobile) {
+      setSaveAfterConfirm(true);
+      setAskContinue(true);
+      return;
+    }
+    save.mutate();
   }
 
   const field = "space-y-1.5";
 
   return (
-    <form
-      className="space-y-5"
-      onSubmit={(e) => {
-        e.preventDefault();
-        save.mutate();
-      }}
-    >
+    <form className="space-y-5" onSubmit={onSubmit}>
       <div className="grid gap-4 sm:grid-cols-2">
         <div className={field}>
           <Label htmlFor="enquiry_date">Enquiry date</Label>
@@ -168,7 +192,7 @@ export function EnquiryForm({
           />
           {dupes.length > 0 ? (
             <p className="text-xs text-warn">
-              Open enquiry already exists for {dupes[0].customer_name} ({dupes[0].status}).
+              Already entered for {dupes[0].customer_name} ({dupes[0].status}).
             </p>
           ) : null}
         </div>
@@ -322,6 +346,64 @@ export function EnquiryForm({
           {save.isPending ? "Saving…" : enquiry ? "Save changes" : "Create enquiry"}
         </Button>
       </div>
+      {askContinue && dupes[0] ? (
+        <div className="fixed inset-0 z-50 grid place-items-end bg-black/50 p-4 sm:place-items-center">
+          <div className="w-full max-w-md rounded-2xl bg-surface p-5 shadow-xl" role="dialog" aria-modal="true">
+            <p className="text-xs font-semibold uppercase tracking-[0.16em] text-accent">Already entered</p>
+            <h2 className="mt-1 font-display text-2xl text-ink">This person’s enquiry is already saved</h2>
+            <p className="mt-2 text-sm text-ink-soft">
+              Mobile <span className="font-semibold text-ink">{dupes[0].mobile}</span> belongs to{" "}
+              <span className="font-semibold text-ink">{dupes[0].customer_name}</span>.
+            </p>
+            <ul className="mt-3 space-y-2">
+              {dupes.map((d) => (
+                <li key={d.id} className="rounded-lg bg-surface-2 px-3 py-2 text-sm">
+                  <p className="font-medium text-ink">{d.customer_name}</p>
+                  <p className="text-xs text-muted">
+                    {d.status} · {d.vehicle}
+                    {d.village ? ` · ${d.village}` : ""}
+                  </p>
+                </li>
+              ))}
+            </ul>
+            <p className="mt-3 text-sm text-ink">Do you want to continue?</p>
+            <div className="mt-4 flex flex-col gap-2 sm:flex-row">
+              <Button
+                type="button"
+                className="flex-1"
+                onClick={() => {
+                  setConfirmedMobile(normalizeMobile(values.mobile));
+                  setAskContinue(false);
+                  if (saveAfterConfirm) {
+                    setSaveAfterConfirm(false);
+                    save.mutate();
+                  }
+                }}
+              >
+                Yes, continue
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                className="flex-1"
+                onClick={() => {
+                  setAskContinue(false);
+                  setSaveAfterConfirm(false);
+                }}
+              >
+                No
+              </Button>
+            </div>
+            <Link
+              to="/enquiry/$id"
+              params={{ id: dupes[0].id }}
+              className="mt-3 block text-center text-sm font-medium text-accent"
+            >
+              Open {dupes[0].customer_name}
+            </Link>
+          </div>
+        </div>
+      ) : null}
     </form>
   );
 }

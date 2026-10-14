@@ -9,6 +9,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { DATE_PRESETS, ENQUIRY_STATUSES, LEAD_SOURCES, PURCHASE_MODES, VEHICLES, type DatePreset } from "@/lib/crm/constants";
 import { rangeForPreset } from "@/lib/crm/dates";
 import { runReport, type ReportKind, type ReportResult } from "@/lib/crm/reports";
+import { TagFilterBar } from "@/components/tag-picker";
 import { downloadTextFile, toCsv } from "@/lib/utils";
 
 export const Route = createFileRoute("/reports")({ component: ReportsPage });
@@ -44,6 +45,7 @@ function Reports({ staff }: { staff: { user_id: string; full_name: string }[] })
   const [status, setStatus] = useState("");
   const [purchaseMode, setPurchaseMode] = useState("");
   const [leadSource, setLeadSource] = useState("");
+  const [tagId, setTagId] = useState("");
   const [result, setResult] = useState<ReportResult | null>(null);
 
   const range = useMemo(() => rangeForPreset(preset, from, to), [preset, from, to]);
@@ -56,6 +58,7 @@ function Reports({ staff }: { staff: { user_id: string; full_name: string }[] })
     status: status || undefined,
     purchaseMode: purchaseMode || undefined,
     leadSource: leadSource || undefined,
+    tagId: tagId || undefined,
   };
 
   const run = useMutation({
@@ -105,6 +108,8 @@ function Reports({ staff }: { staff: { user_id: string; full_name: string }[] })
           </button>
         ))}
       </div>
+
+      <TagFilterBar value={tagId} onChange={setTagId} allowCreate={false} />
 
       <div className="mb-4 grid grid-cols-2 gap-2 lg:grid-cols-6">
         <select className="h-11 rounded-md border border-line bg-surface px-3 text-sm" value={preset} onChange={(e) => setPreset(e.target.value as DatePreset)}>

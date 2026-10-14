@@ -24,6 +24,7 @@ const reportInput = z.object({
   status: z.string().optional(),
   purchaseMode: z.string().optional(),
   leadSource: z.string().optional(),
+  tagId: z.string().optional(),
   export: z.boolean().optional(),
 });
 
@@ -65,6 +66,12 @@ export const runReport = createServerFn({ method: "POST" })
       params.push(data.leadSource);
       where.push(`e.lead_source = $${params.length}`);
     }
+    if (data.tagId) {
+      params.push(data.tagId);
+      where.push(
+        `exists (select 1 from enquiry_tags et where et.enquiry_id = e.id and et.tag_id = $${params.length})`,
+      );
+    }
     const clause = where.join(" and ");
 
     const loadEnquiries = async (extra = "") => {
@@ -92,6 +99,7 @@ export const runReport = createServerFn({ method: "POST" })
       "Staff",
       "Value",
       "Follow-up",
+      "Tags",
     ];
     const enquiryRow = (e: Enquiry) => [
       e.enquiry_date,
@@ -105,6 +113,7 @@ export const runReport = createServerFn({ method: "POST" })
       e.assigned_to_name ?? "",
       e.estimated_value,
       e.next_follow_up,
+      (e.tags ?? []).map((t) => t.name).join(", "),
     ];
 
     let result: ReportResult;
@@ -135,6 +144,12 @@ export const runReport = createServerFn({ method: "POST" })
           pendingParams.push(data.staffId);
           pendingWhere.push(`e.assigned_to = $${pendingParams.length}`);
         }
+        if (data.tagId) {
+          pendingParams.push(data.tagId);
+          pendingWhere.push(
+            `exists (select 1 from enquiry_tags et where et.enquiry_id = e.id and et.tag_id = $${pendingParams.length})`,
+          );
+        }
         const list = await sql.query<Parameters<typeof mapEnquiry>[0]>(
           `select ${ENQUIRY_SELECT}
            from enquiries e
@@ -152,6 +167,17 @@ export const runReport = createServerFn({ method: "POST" })
         break;
       }
       case "staff": {
+        const staffParams: unknown[] = [data.from, data.to];
+        let tagOnE = "";
+        let tagOnX = "";
+        let tagOnXe = "";
+        if (data.tagId) {
+          staffParams.push(data.tagId);
+          const n = staffParams.length;
+          tagOnE = `and exists (select 1 from enquiry_tags et where et.enquiry_id = e.id and et.tag_id = $${n})`;
+          tagOnX = `and exists (select 1 from enquiry_tags et where et.enquiry_id = x.id and et.tag_id = $${n})`;
+          tagOnXe = `and exists (select 1 from enquiry_tags et where et.enquiry_id = xe.id and et.tag_id = $${n})`;
+        }
         const rows = await sql.query<StaffPerformance>(
           `select
              p.user_id, p.full_name,
@@ -159,18 +185,22 @@ export const runReport = createServerFn({ method: "POST" })
              count(e.id) filter (where e.status = 'Sold')::int as sold,
              count(e.id) filter (where e.status = 'Lost')::int as lost,
              (select count(*)::int from follow_ups f
+               join enquiries xe on xe.id = f.enquiry_id
                where f.staff_id = p.user_id and f.status = 'Completed'
-                 and f.follow_up_date >= $1 and f.follow_up_date <= $2) as "followUpsCompleted",
+                 and f.follow_up_date >= $1 and f.follow_up_date <= $2
+                 ${tagOnXe}) as "followUpsCompleted",
              (select count(*)::int from enquiries x
                where x.assigned_to = p.user_id and x.next_follow_up is not null
-                 and x.status not in ('Sold','Lost')) as "pendingFollowUps",
+                 and x.status not in ('Sold','Lost')
+                 ${tagOnX}) as "pendingFollowUps",
              0::float as conversion
            from profiles p
            left join enquiries e on e.assigned_to = p.user_id
              and e.enquiry_date >= $1 and e.enquiry_date <= $2
+             ${tagOnE}
            group by p.user_id, p.full_name
            order by count(e.id) desc`,
-          [data.from, data.to],
+          staffParams,
         );
         result = {
           title: "Staff Performance",
@@ -265,6 +295,12 @@ export const runReport = createServerFn({ method: "POST" })
         break;
       }
       case "followups": {
+        const followParams: unknown[] = [data.from, data.to];
+        let tagSql = "";
+        if (data.tagId) {
+          followParams.push(data.tagId);
+          tagSql = `and exists (select 1 from enquiry_tags et where et.enquiry_id = e.id and et.tag_id = $${followParams.length})`;
+        }
         const rows = await sql.query<{
           customer_name: string;
           mobile: string;
@@ -281,8 +317,9 @@ export const runReport = createServerFn({ method: "POST" })
            join enquiries e on e.id = f.enquiry_id
            left join profiles p on p.user_id = f.staff_id
            where f.follow_up_date >= $1 and f.follow_up_date <= $2
+             ${tagSql}
            order by f.follow_up_date desc`,
-          [data.from, data.to],
+          followParams,
         );
         result = {
           title: "Follow-up Report",

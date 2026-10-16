@@ -17,7 +17,6 @@ import { recordLogout } from "@/lib/crm/session";
 import type { SessionInfo } from "@/lib/crm/types";
 import { cn } from "@/lib/utils";
 import { APP_NAME } from "@/lib/crm/constants";
-import { StaffCaptureGuard } from "@/components/staff-capture-guard";
 
 type Item = {
   to: string;
@@ -53,7 +52,6 @@ export function AppShell({
   }
 
   return (
-    <StaffCaptureGuard session={session}>
     <div className="min-h-dvh bg-bg">
       <aside className="fixed inset-y-0 left-0 z-30 hidden w-60 flex-col border-r border-line bg-surface lg:flex">
         <div className="border-b border-line px-4 py-4">
@@ -131,7 +129,6 @@ export function AppShell({
         )}
       </nav>
     </div>
-    </StaffCaptureGuard>
   );
 }
 

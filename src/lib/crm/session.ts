@@ -69,23 +69,3 @@ export const recordLogout = createServerFn({ method: "POST" })
     }
     return { ok: true };
   });
-
-export const recordCaptureAttempt = createServerFn({ method: "POST" })
-  .middleware([authMiddleware])
-  .handler(async ({ context }) => {
-    try {
-      const { sql, profile } = await requireCrmUser(context.userId);
-      if (profile.role === "owner") return { ok: true };
-      await writeAudit(sql, {
-        actorId: profile.user_id,
-        actorName: profile.full_name,
-        action: "screenshot_attempt",
-        entity: "session",
-        entityId: profile.user_id,
-        details: "Staff tried to capture the screen",
-      });
-    } catch {
-      /* best effort */
-    }
-    return { ok: true };
-  });

@@ -55,6 +55,18 @@ export const FOLLOW_UP_STATUSES = [
   "Lost",
 ] as const;
 
+export const OCCASIONS = [
+  "Dhanteras",
+  "Diwali",
+  "Navratri",
+  "Dussehra",
+  "Akshaya Tritiya",
+  "Gudi Padwa",
+  "Wedding",
+  "New Year",
+  "Other",
+] as const;
+
 export const DATE_PRESETS = [
   { id: "today", label: "Today" },
   { id: "week", label: "This Week" },

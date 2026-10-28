@@ -158,6 +158,23 @@ export type EnquiryFilters = {
   tagId?: string;
 };
 
+export type Booking = {
+  id: string;
+  booking_date: string;
+  customer_name: string;
+  mobile: string;
+  city: string;
+  vehicle: string;
+  amount: number;
+  delivery_date: string | null;
+  occasion: string;
+  notes: string | null;
+  created_by: string;
+  created_by_name: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
 export type SessionInfo = {
   profile: Profile;
   settings: ShowroomSettings;

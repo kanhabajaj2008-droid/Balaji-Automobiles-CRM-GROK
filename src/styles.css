@@ -101,6 +101,15 @@
   }
 }
 
+@media print {
+  .no-print {
+    display: none !important;
+  }
+  .print-only {
+    display: block !important;
+  }
+}
+
 .font-display {
   font-family: var(--font-display);
 }

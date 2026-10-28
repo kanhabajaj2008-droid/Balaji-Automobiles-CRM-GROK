@@ -65,6 +65,9 @@ function Dashboard({ owner }: { owner: boolean }) {
         actions={
           <div className="flex items-center gap-2">
             {owner ? <LiveBadge /> : null}
+            <Button asChild variant="outline">
+              <Link to="/bookings">Booking list</Link>
+            </Button>
             <Button asChild>
               <Link to="/enquiry/new">New enquiry</Link>
             </Button>

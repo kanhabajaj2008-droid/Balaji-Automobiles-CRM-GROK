@@ -8,6 +8,7 @@ import {
   Shield,
   Users,
   BarChart3,
+  CalendarCheck,
 } from "lucide-react";
 import { type ReactNode } from "react";
 import { UserButton } from "@/lib/auth/gates";
@@ -29,6 +30,7 @@ type Item = {
 const NAV: Item[] = [
   { to: "/", label: "Home", icon: LayoutDashboard, mobile: true },
   { to: "/enquiries", label: "Enquiries", icon: ClipboardList, mobile: true },
+  { to: "/bookings", label: "Bookings", icon: CalendarCheck, mobile: true },
   { to: "/follow-ups", label: "Follow-ups", icon: PhoneCall, mobile: true },
   { to: "/reports", label: "Reports", icon: BarChart3, ownerOnly: true },
   { to: "/staff", label: "Staff", icon: Users, ownerOnly: true },
@@ -53,7 +55,7 @@ export function AppShell({
 
   return (
     <div className="min-h-dvh bg-bg">
-      <aside className="fixed inset-y-0 left-0 z-30 hidden w-60 flex-col border-r border-line bg-surface lg:flex">
+      <aside className="fixed inset-y-0 left-0 z-30 hidden w-60 flex-col border-r border-line bg-surface print:hidden lg:flex">
         <div className="border-b border-line px-4 py-4">
           <div className="flex items-center gap-3">
             <img src="/logo.png" alt="" className="size-12 rounded-xl" />
@@ -92,7 +94,7 @@ export function AppShell({
         </div>
       </aside>
 
-      <header className="sticky top-0 z-20 flex items-center justify-between border-b border-line bg-surface/90 px-4 py-3 backdrop-blur lg:hidden">
+      <header className="sticky top-0 z-20 flex items-center justify-between border-b border-line bg-surface/90 px-4 py-3 backdrop-blur print:hidden lg:hidden">
         <div className="flex min-w-0 items-center gap-2">
           <img src="/logo.png" alt="" className="size-9 shrink-0 rounded-lg" />
           <div className="min-w-0">
@@ -103,12 +105,15 @@ export function AppShell({
         <UserButton />
       </header>
 
-      <div className="lg:pl-60">
+      <div className="lg:pl-60 print:pl-0">
         <div className="mx-auto max-w-6xl px-4 pb-24 pt-4 lg:px-8 lg:pb-10 lg:pt-8">{children}</div>
       </div>
 
-      <nav className="fixed inset-x-0 bottom-0 z-30 grid grid-cols-4 border-t border-line bg-surface pb-[env(safe-area-inset-bottom)] lg:hidden">
-        {(isOwner ? items.filter((i) => ["/", "/enquiries", "/follow-ups", "/reports"].includes(i.to)) : items.slice(0, 4)).map(
+      <nav className="fixed inset-x-0 bottom-0 z-30 grid border-t border-line bg-surface pb-[env(safe-area-inset-bottom)] print:hidden lg:hidden grid-cols-4">
+        {(isOwner
+          ? items.filter((i) => ["/", "/enquiries", "/bookings", "/reports"].includes(i.to))
+          : items.filter((i) => ["/", "/enquiries", "/bookings", "/follow-ups"].includes(i.to))
+        ).map(
           (item) => {
             const active = item.to === "/" ? pathname === "/" : pathname.startsWith(item.to);
             const Icon = item.icon;

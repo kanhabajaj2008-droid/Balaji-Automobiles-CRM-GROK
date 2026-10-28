@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuditRouteImport } from './routes/audit'
+import { Route as BookingsRouteImport } from './routes/bookings'
 import { Route as EnquiriesRouteImport } from './routes/enquiries'
 import { Route as FollowUpsRouteImport } from './routes/follow-ups'
 import { Route as LoginRouteImport } from './routes/login'
@@ -29,6 +30,11 @@ const IndexRoute = IndexRouteImport.update({
 const AuditRoute = AuditRouteImport.update({
   id: '/audit',
   path: '/audit',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const BookingsRoute = BookingsRouteImport.update({
+  id: '/bookings',
+  path: '/bookings',
   getParentRoute: () => rootRouteImport,
 } as any)
 const EnquiriesRoute = EnquiriesRouteImport.update({
@@ -80,6 +86,7 @@ const ApiAuthSplatRoute = ApiAuthSplatRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/audit': typeof AuditRoute
+  '/bookings': typeof BookingsRoute
   '/enquiries': typeof EnquiriesRoute
   '/follow-ups': typeof FollowUpsRoute
   '/login': typeof LoginRoute
@@ -93,6 +100,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/audit': typeof AuditRoute
+  '/bookings': typeof BookingsRoute
   '/enquiries': typeof EnquiriesRoute
   '/follow-ups': typeof FollowUpsRoute
   '/login': typeof LoginRoute
@@ -107,6 +115,7 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/audit': typeof AuditRoute
+  '/bookings': typeof BookingsRoute
   '/enquiries': typeof EnquiriesRoute
   '/follow-ups': typeof FollowUpsRoute
   '/login': typeof LoginRoute
@@ -122,6 +131,7 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/audit'
+    | '/bookings'
     | '/enquiries'
     | '/follow-ups'
     | '/login'
@@ -135,6 +145,7 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/audit'
+    | '/bookings'
     | '/enquiries'
     | '/follow-ups'
     | '/login'
@@ -148,6 +159,7 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/audit'
+    | '/bookings'
     | '/enquiries'
     | '/follow-ups'
     | '/login'
@@ -162,6 +174,7 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuditRoute: typeof AuditRoute
+  BookingsRoute: typeof BookingsRoute
   EnquiriesRoute: typeof EnquiriesRoute
   FollowUpsRoute: typeof FollowUpsRoute
   LoginRoute: typeof LoginRoute
@@ -187,6 +200,13 @@ declare module '@tanstack/react-router' {
       path: '/audit'
       fullPath: '/audit'
       preLoaderRoute: typeof AuditRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/bookings': {
+      id: '/bookings'
+      path: '/bookings'
+      fullPath: '/bookings'
+      preLoaderRoute: typeof BookingsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/enquiries': {
@@ -258,6 +278,7 @@ declare module '@tanstack/react-router' {
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuditRoute: AuditRoute,
+  BookingsRoute: BookingsRoute,
   EnquiriesRoute: EnquiriesRoute,
   FollowUpsRoute: FollowUpsRoute,
   LoginRoute: LoginRoute,

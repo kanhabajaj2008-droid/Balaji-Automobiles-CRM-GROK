@@ -24,25 +24,69 @@ export const getDashboard = createServerFn({ method: "POST" })
     const params = [data.from, data.to, ...acc.params];
     const access = acc.sql.replace("$3", `$${params.length}`);
 
-    const statsRows = await sql.query<{
-      total: number;
-      neu: number;
-      sold: number;
-      lost: number;
-      pipeline: string | number | null;
-      sold_value: string | number | null;
-    }>(
-      `select
-         count(*)::int as total,
-         count(*) filter (where status = 'New')::int as neu,
-         count(*) filter (where status = 'Sold')::int as sold,
-         count(*) filter (where status = 'Lost')::int as lost,
-         coalesce(sum(estimated_value) filter (where status not in ('Sold','Lost')), 0)::text as pipeline,
-         coalesce(sum(estimated_value) filter (where status = 'Sold'), 0)::text as sold_value
-       from enquiries
-       where enquiry_date >= $1 and enquiry_date <= $2 ${access}`,
-      params,
-    );
+    const [statsRows, followCounts, byMonth, byVehicle, byPurchaseMode, byLeadSource] = await Promise.all([
+      sql.query<{
+        total: number;
+        neu: number;
+        sold: number;
+        lost: number;
+        pipeline: string | number | null;
+        sold_value: string | number | null;
+      }>(
+        `select
+           count(*)::int as total,
+           count(*) filter (where status = 'New')::int as neu,
+           count(*) filter (where status = 'Sold')::int as sold,
+           count(*) filter (where status = 'Lost')::int as lost,
+           coalesce(sum(estimated_value) filter (where status not in ('Sold','Lost')), 0)::text as pipeline,
+           coalesce(sum(estimated_value) filter (where status = 'Sold'), 0)::text as sold_value
+         from enquiries
+         where enquiry_date >= $1 and enquiry_date <= $2 ${access}`,
+        params,
+      ),
+      sql.query<{ today: number; overdue: number; open: number }>(
+        `select
+           count(*) filter (where next_follow_up = current_date)::int as today,
+           count(*) filter (where next_follow_up < current_date)::int as overdue,
+           count(*)::int as open
+         from enquiries
+         where next_follow_up is not null
+           and status not in ('Sold','Lost')`,
+      ),
+      sql.query<{ month: string; enquiries: number; sold: number }>(
+        `select to_char(date_trunc('month', enquiry_date), 'YYYY-MM') as month,
+                count(*)::int as enquiries,
+                count(*) filter (where status = 'Sold')::int as sold
+         from enquiries
+         where enquiry_date >= $1 and enquiry_date <= $2 ${access}
+         group by 1
+         order by 1`,
+        params,
+      ),
+      sql.query<NamedCount>(
+        `select vehicle as name, count(*)::int as count,
+                coalesce(sum(estimated_value),0)::float as value
+         from enquiries
+         where enquiry_date >= $1 and enquiry_date <= $2 ${access}
+         group by vehicle order by count desc, vehicle asc`,
+        params,
+      ),
+      sql.query<NamedCount>(
+        `select purchase_mode as name, count(*)::int as count
+         from enquiries
+         where enquiry_date >= $1 and enquiry_date <= $2 ${access}
+         group by purchase_mode order by count desc`,
+        params,
+      ),
+      sql.query<NamedCount>(
+        `select lead_source as name, count(*)::int as count
+         from enquiries
+         where enquiry_date >= $1 and enquiry_date <= $2 ${access}
+         group by lead_source order by count desc`,
+        params,
+      ),
+    ]);
+
     const s = statsRows[0] ?? {
       total: 0,
       neu: 0,
@@ -51,61 +95,9 @@ export const getDashboard = createServerFn({ method: "POST" })
       pipeline: 0,
       sold_value: 0,
     };
-
-    const followParams: unknown[] = [];
-    const followAccess = "";
-
-    const followCounts = await sql.query<{ today: number; overdue: number; open: number }>(
-      `select
-         count(*) filter (where next_follow_up = current_date)::int as today,
-         count(*) filter (where next_follow_up < current_date)::int as overdue,
-         count(*)::int as open
-       from enquiries
-       where next_follow_up is not null
-         and status not in ('Sold','Lost')
-         ${followAccess}`,
-      followParams,
-    );
     const fc = followCounts[0] ?? { today: 0, overdue: 0, open: 0 };
-
     const closed = s.sold + s.lost;
     const conversionRate = closed === 0 ? 0 : Math.round((s.sold / closed) * 1000) / 10;
-
-    const byMonth = await sql.query<{ month: string; enquiries: number; sold: number }>(
-      `select to_char(date_trunc('month', enquiry_date), 'YYYY-MM') as month,
-              count(*)::int as enquiries,
-              count(*) filter (where status = 'Sold')::int as sold
-       from enquiries
-       where enquiry_date >= $1 and enquiry_date <= $2 ${access}
-       group by 1
-       order by 1`,
-      params,
-    );
-
-    const byVehicle = await sql.query<NamedCount>(
-      `select vehicle as name, count(*)::int as count,
-              coalesce(sum(estimated_value),0)::float as value
-       from enquiries
-       where enquiry_date >= $1 and enquiry_date <= $2 ${access}
-       group by vehicle order by count desc, vehicle asc`,
-      params,
-    );
-
-    const byPurchaseMode = await sql.query<NamedCount>(
-      `select purchase_mode as name, count(*)::int as count
-       from enquiries
-       where enquiry_date >= $1 and enquiry_date <= $2 ${access}
-       group by purchase_mode order by count desc`,
-      params,
-    );
-
-    const byLeadSource = await sql.query<NamedCount>(
-      `select lead_source as name, count(*)::int as count
-       from enquiries
-       where enquiry_date >= $1 and enquiry_date <= $2 ${access}
-       group by lead_source order by count desc`,
-      params,
-    );
 
     let staffPerformance: StaffPerformance[] = [];
     if (isOwner) {
@@ -179,9 +171,7 @@ export const getDashboard = createServerFn({ method: "POST" })
        left join profiles p on p.user_id = e.assigned_to
        where e.next_follow_up is not null
          and e.status not in ('Sold','Lost')
-         ${followAccess}
        order by e.next_follow_up asc`,
-      followParams,
     );
 
     const today = new Date();

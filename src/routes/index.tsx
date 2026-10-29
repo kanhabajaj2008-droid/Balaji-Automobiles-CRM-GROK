@@ -47,6 +47,7 @@ function Dashboard({ owner }: { owner: boolean }) {
     queryKey: ["dashboard", range.from, range.to],
     queryFn: () => getDashboard({ data: range }),
     refetchInterval: LIVE_POLL_MS,
+    staleTime: 10_000,
     refetchOnWindowFocus: true,
   });
 

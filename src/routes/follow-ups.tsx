@@ -25,6 +25,7 @@ function Board() {
     queryKey: ["follow-board", tagId],
     queryFn: () => listFollowUpBoard({ data: { tagId: tagId || undefined } }),
     refetchInterval: LIVE_POLL_MS,
+    staleTime: 10_000,
     refetchOnWindowFocus: true,
   });
   const data = q.data;

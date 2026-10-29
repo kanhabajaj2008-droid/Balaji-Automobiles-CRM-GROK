@@ -21,11 +21,19 @@ export class NotFoundError extends Error {
 
 type UserRow = { id: string; name: string; email: string };
 
+const crmUserCache = new Map<
+  string,
+  { at: number; value: { sql: Sql; profile: Profile; settings: ShowroomSettings } }
+>();
+
 export async function requireCrmUser(userId: string): Promise<{
   sql: Sql;
   profile: Profile;
   settings: ShowroomSettings;
 }> {
+  const hit = crmUserCache.get(userId);
+  if (hit && Date.now() - hit.at < 30_000) return hit.value;
+
   const sql = await getSql();
   await bootstrapOwnerIfNeeded(sql, userId);
 
@@ -56,7 +64,9 @@ export async function requireCrmUser(userId: string): Promise<{
     default_follow_up_days: 2,
   };
 
-  return { sql, profile, settings };
+  const value = { sql, profile, settings };
+  crmUserCache.set(userId, { at: Date.now(), value });
+  return value;
 }
 
 async function bootstrapOwnerIfNeeded(sql: Sql, userId: string) {
@@ -357,15 +367,20 @@ export const ENQUIRY_SELECT = `
     e.is_demo,
     e.created_at::text as created_at,
     e.updated_at::text as updated_at,
-    (
-      select coalesce(
-        json_agg(json_build_object('id', t.id, 'name', t.name) order by lower(t.name)),
-        '[]'::json
-      )
-      from enquiry_tags et
-      join tags t on t.id = et.tag_id
-      where et.enquiry_id = e.id
-    ) as tags
+    coalesce(tg.tags, '[]'::json) as tags
+`;
+
+export const ENQUIRY_FROM = `
+  from enquiries e
+  left join profiles ap on ap.user_id = e.assigned_to
+  left join profiles cp on cp.user_id = e.created_by
+  left join (
+    select et.enquiry_id,
+           json_agg(json_build_object('id', t.id, 'name', t.name) order by lower(t.name)) as tags
+    from enquiry_tags et
+    join tags t on t.id = et.tag_id
+    group by et.enquiry_id
+  ) tg on tg.enquiry_id = e.id
 `;
 
 export async function writeAudit(

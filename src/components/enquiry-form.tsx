@@ -147,11 +147,14 @@ export function EnquiryForm({
       toast.error("Enter a valid 10-digit Indian mobile number.");
       return;
     }
-    const matches = await lookupMobile(values.mobile);
-    if (matches.length > 0 && normalizeMobile(values.mobile) !== confirmedMobile) {
-      setSaveAfterConfirm(true);
-      setAskContinue(true);
-      return;
+    const mobile = normalizeMobile(values.mobile);
+    if (mobile !== confirmedMobile) {
+      const matches = await lookupMobile(values.mobile);
+      if (matches.length > 0) {
+        setSaveAfterConfirm(true);
+        setAskContinue(true);
+        return;
+      }
     }
     save.mutate();
   }

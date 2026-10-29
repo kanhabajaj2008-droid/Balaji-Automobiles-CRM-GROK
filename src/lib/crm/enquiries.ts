@@ -3,6 +3,7 @@ import { z } from "zod";
 import { authMiddleware } from "@/lib/auth/middleware";
 import { addDaysIso, isValidMobile, newId, normalizeMobile, todayIso } from "@/lib/utils";
 import {
+  ENQUIRY_FROM,
   ENQUIRY_SELECT,
   ForbiddenError,
   loadEnquiry,
@@ -129,12 +130,10 @@ export const listEnquiries = createServerFn({ method: "POST" })
     const clause = where.length ? `where ${where.join(" and ")}` : "";
     const rows = await sql.query<Parameters<typeof mapEnquiry>[0]>(
       `select ${ENQUIRY_SELECT}
-       from enquiries e
-       left join profiles ap on ap.user_id = e.assigned_to
-       left join profiles cp on cp.user_id = e.created_by
+       ${ENQUIRY_FROM}
        ${clause}
        order by e.updated_at desc
-       limit 500`,
+       limit 200`,
       params,
     );
     return rows.map(mapEnquiry);
@@ -210,9 +209,7 @@ export const checkDuplicateMobile = createServerFn({ method: "POST" })
 
     const rows = await sql.query<Parameters<typeof mapEnquiry>[0]>(
       `select ${ENQUIRY_SELECT}
-       from enquiries e
-       left join profiles ap on ap.user_id = e.assigned_to
-       left join profiles cp on cp.user_id = e.created_by
+       ${ENQUIRY_FROM}
        where e.mobile = $1 ${extra}
        order by e.updated_at desc
        limit 5`,

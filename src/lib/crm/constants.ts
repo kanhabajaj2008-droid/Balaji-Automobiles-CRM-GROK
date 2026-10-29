@@ -2,7 +2,7 @@ export const APP_NAME = "BALAJI SALES APP";
 export const APP_TAGLINE = "Sales Enquiry & Customer CRM";
 
 /** How often owner/staff screens pull shared enquiry data (ms). */
-export const LIVE_POLL_MS = 4000;
+export const LIVE_POLL_MS = 20000;
 
 export const VEHICLES = [
   "Splendor Plus",

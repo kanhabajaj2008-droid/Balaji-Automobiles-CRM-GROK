@@ -17,7 +17,7 @@ function NewEnquiryPage() {
             <CardContent className="pt-5">
               <EnquiryForm
                 session={session}
-                onSaved={(id) => navigate({ to: "/enquiry/$id", params: { id } })}
+                onSaved={() => navigate({ to: "/enquiries" })}
               />
             </CardContent>
           </Card>

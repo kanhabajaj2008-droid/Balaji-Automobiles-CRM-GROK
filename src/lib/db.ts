@@ -1,3 +1,4 @@
+import { Pool } from "pg";
 import { pendingMigrations } from "../../scripts/migration-plan.mjs";
 
 /** Which database backend is active. */
@@ -8,7 +9,33 @@ export type DbSource = "neon" | "pglite";
 const rawDatabaseUrl =
   typeof process !== "undefined" ? process.env.DATABASE_URL : undefined;
 const databaseUrl =
-  rawDatabaseUrl && rawDatabaseUrl.trim() ? rawDatabaseUrl : undefined;
+  rawDatabaseUrl && rawDatabaseUrl.trim() ? rawDatabaseUrl.trim() : undefined;
+
+/** Neon direct hosts stall on Vercel. The pooler host keeps one warm connection. */
+export function withNeonPooler(connectionString: string): string {
+  return connectionString.replace(/@([^/?#]+)/, (match, host: string) => {
+    if (!host.endsWith(".neon.tech")) return match;
+    if (host.includes("-pooler") || host.includes(".pooler.")) return match;
+    const dot = host.indexOf(".");
+    if (dot <= 0) return match;
+    return `@${host.slice(0, dot)}-pooler${host.slice(dot)}`;
+  });
+}
+
+const neonPoolRef = globalThis as typeof globalThis & { __neonPool__?: Pool };
+
+/** One small pool shared by the CRM and Better Auth. Does not touch stored data. */
+export function getNeonPool(): Pool {
+  if (!databaseUrl) throw new Error("DATABASE_URL is not set");
+  neonPoolRef.__neonPool__ ??= new Pool({
+    connectionString: withNeonPooler(databaseUrl),
+    max: 3,
+    idleTimeoutMillis: 5_000,
+    connectionTimeoutMillis: 10_000,
+    allowExitOnIdle: true,
+  });
+  return neonPoolRef.__neonPool__;
+}
 
 /**
  * Active backend: real **Neon** when `DATABASE_URL` is set (deployed / configured
@@ -87,13 +114,11 @@ function toSql(run: Run): Sql {
 
 function createNeonSql(): Promise<Sql> {
   globalRef.__pgSqlPromise__ ??= (async () => {
-    // Regular Postgres driver: node-postgres (`pg`) — works directly with Neon's
-    // pooled endpoint. One pool per process; warm serverless instances reuse it.
-    const { Pool, types } = await import("pg");
+    const { types } = await import("pg");
     types.setTypeParser(OID_INT8, Number);
     types.setTypeParser(OID_DATE, identity);
     types.setTypeParser(OID_INTERVAL, identity);
-    const pool = new Pool({ connectionString: databaseUrl });
+    const pool = getNeonPool();
     return toSql(async <T>(text: string, params: unknown[]) => {
       const res = await pool.query(text, params);
       return res.rows as T[];

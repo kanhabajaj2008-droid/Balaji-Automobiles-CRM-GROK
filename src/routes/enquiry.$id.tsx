@@ -44,6 +44,7 @@ function Detail({ id, session }: { id: string; session: SessionInfo }) {
     queryKey: ["enquiry", id],
     queryFn: () => getEnquiry({ data: { id } }),
     refetchInterval: LIVE_POLL_MS,
+    staleTime: 10_000,
     refetchOnWindowFocus: true,
   });
 

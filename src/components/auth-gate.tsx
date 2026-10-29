@@ -16,6 +16,8 @@ export function useCrmSession() {
     queryFn: () => getSessionInfo(),
     enabled: Boolean(user),
     retry: false,
+    staleTime: 60_000,
+    refetchOnWindowFocus: false,
   });
   return { user, isPending, session };
 }

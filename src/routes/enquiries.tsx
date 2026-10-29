@@ -42,6 +42,7 @@ function Enquiries({
     queryKey: ["enquiries", filters],
     queryFn: () => listEnquiries({ data: filters }),
     refetchInterval: LIVE_POLL_MS,
+    staleTime: 10_000,
     refetchOnWindowFocus: true,
   });
 

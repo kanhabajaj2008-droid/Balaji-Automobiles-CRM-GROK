@@ -1,7 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { authMiddleware } from "@/lib/auth/middleware";
-import { ENQUIRY_SELECT, mapEnquiry, requireCrmUser, requireOwner, writeAudit } from "./authz";
+import { ENQUIRY_FROM, ENQUIRY_SELECT, mapEnquiry, requireCrmUser, requireOwner, writeAudit } from "./authz";
 import type { Enquiry, StaffPerformance } from "./types";
 
 const reportInput = z.object({
@@ -77,9 +77,7 @@ export const runReport = createServerFn({ method: "POST" })
     const loadEnquiries = async (extra = "") => {
       const rows = await sql.query<Parameters<typeof mapEnquiry>[0]>(
         `select ${ENQUIRY_SELECT}
-         from enquiries e
-         left join profiles ap on ap.user_id = e.assigned_to
-         left join profiles cp on cp.user_id = e.created_by
+         ${ENQUIRY_FROM}
          where ${clause} ${extra}
          order by e.enquiry_date desc, e.created_at desc`,
         params,
@@ -152,9 +150,7 @@ export const runReport = createServerFn({ method: "POST" })
         }
         const list = await sql.query<Parameters<typeof mapEnquiry>[0]>(
           `select ${ENQUIRY_SELECT}
-           from enquiries e
-           left join profiles ap on ap.user_id = e.assigned_to
-           left join profiles cp on cp.user_id = e.created_by
+           ${ENQUIRY_FROM}
            where ${pendingWhere.join(" and ")}
            order by e.next_follow_up asc`,
           pendingParams,

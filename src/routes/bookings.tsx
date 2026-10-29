@@ -60,6 +60,7 @@ function Bookings({ session }: { session: SessionInfo }) {
     queryKey: ["bookings", filters],
     queryFn: () => listBookings({ data: filters }),
     refetchInterval: LIVE_POLL_MS,
+    staleTime: 10_000,
     refetchOnWindowFocus: true,
   });
 
